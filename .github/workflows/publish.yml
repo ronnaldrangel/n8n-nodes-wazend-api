@@ -1,6 +1,22 @@
 name: Publish to npm
 on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  release:
+    types: [published]
   workflow_dispatch:
+    inputs:
+      bump:
+        description: 'auto publishes the current version and bumps a patch when it already exists on npm'
+        type: choice
+        options:
+          - auto
+          - patch
+          - minor
+          - major
+          - none
+        default: auto
 permissions:
   contents: read
 concurrency:
@@ -8,10 +24,10 @@ concurrency:
   cancel-in-progress: false
 jobs:
   publish:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.ref_type == 'tag'
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       id-token: write
     steps:
       - name: Require public source for provenance
@@ -24,17 +40,102 @@ jobs:
           fi
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false
+          fetch-depth: 2
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
           cache: npm
-      - run: npm ci --ignore-scripts --no-audit --no-fund
-      - run: npm run check:branding
-      - run: npm test
-      - run: npm run build
+      - name: Plan the release
+        id: plan
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          HEAD_MESSAGE: ${{ github.event.head_commit.message }}
+          BUMP_INPUT: ${{ inputs.bump }}
+        run: |
+          set -euo pipefail
+
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+
+          if [ "$REF_TYPE" = 'tag' ] && [ "$REF_NAME" != "v$VERSION" ]; then
+            echo "::error::Tag $REF_NAME does not match package.json version $VERSION."
+            exit 1
+          fi
+
+          PUBLISHED=false
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            PUBLISHED=true
+          fi
+
+          BUMP=none
+          SKIP=false
+          if [ "$PUBLISHED" = 'true' ]; then
+            case "$EVENT_NAME" in
+              push)
+                case "$HEAD_MESSAGE" in
+                  *"[skip ci]"*|*"chore(release):"*)
+                    echo "::notice::Release commit detected; nothing to publish."
+                    SKIP=true ;;
+                esac
+                if [ "$SKIP" = 'false' ] && [ "$REF_TYPE" = 'branch' ]; then
+                  CHANGED=$(git diff --name-only HEAD^ HEAD 2>/dev/null || echo package.json)
+                  if printf '%s\n' "$CHANGED" | grep -Eq '^(nodes|credentials|scripts|branding)/|^package(-lock)?\.json$|^upstream\.json$'; then
+                    BUMP=patch
+                  else
+                    echo "::notice::$NAME@$VERSION is current and this commit did not change the package."
+                    SKIP=true
+                  fi
+                fi ;;
+              workflow_dispatch)
+                case "$BUMP_INPUT" in
+                  none)
+                    echo "::notice::$NAME@$VERSION is already published on npm."
+                    SKIP=true ;;
+                  patch|minor|major)
+                    BUMP="$BUMP_INPUT" ;;
+                  *)
+                    BUMP=patch ;;
+                esac ;;
+              *)
+                echo "::notice::$NAME@$VERSION is already published on npm."
+                SKIP=true ;;
+            esac
+          fi
+
+          echo "skip=$SKIP" >> "$GITHUB_OUTPUT"
+          echo "bump=$BUMP" >> "$GITHUB_OUTPUT"
+          echo "Resolved $NAME@$VERSION (published=$PUBLISHED, bump=$BUMP, skip=$SKIP)"
+      - name: Apply version bump
+        if: steps.plan.outputs.skip == 'false' && steps.plan.outputs.bump != 'none'
+        run: npm version "${{ steps.plan.outputs.bump }}" --no-git-tag-version
+      - name: Commit the release version
+        if: steps.plan.outputs.skip == 'false' && steps.plan.outputs.bump != 'none'
+        run: |
+          set -euo pipefail
+          VERSION=$(node -p "require('./package.json').version")
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add package.json package-lock.json
+          git commit -m "chore(release): v$VERSION [skip ci]"
+          git push origin "HEAD:${{ github.ref_name }}"
+      - name: Install dependencies
+        if: steps.plan.outputs.skip == 'false'
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Check branding
+        if: steps.plan.outputs.skip == 'false'
+        run: npm run check:branding
+      - name: Test
+        if: steps.plan.outputs.skip == 'false'
+        run: npm test
+      - name: Build
+        if: steps.plan.outputs.skip == 'false'
+        run: npm run build
       - name: Publish validated package
+        if: steps.plan.outputs.skip == 'false'
         run: npm publish --ignore-scripts --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

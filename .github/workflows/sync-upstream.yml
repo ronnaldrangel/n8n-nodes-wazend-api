@@ -63,6 +63,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      actions: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
@@ -79,3 +80,8 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git commit -m 'chore: sync upstream with Wazend branding'
           git push origin "HEAD:$TARGET_BRANCH"
+      - name: Trigger npm publication
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_BRANCH: ${{ github.event.repository.default_branch }}
+        run: gh workflow run publish.yml --ref "$TARGET_BRANCH" -f bump=auto
