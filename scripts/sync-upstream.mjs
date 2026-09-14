@@ -69,7 +69,10 @@ const conformRules = new Map([
       "\t// the current `NodeConnectionTypes` object of n8n-workflow.\n" +
       "\tinputs: ['main'] as NodeConnectionType[],\n" +
       "\toutputs: ['main'] as NodeConnectionType[],", file),
-    (text) => text.replaceAll('BASE_DESCRIPTION', 'baseDescription').replaceAll('NODE_DESCRIPTION', 'nodeDescription'),
+    // Renamed with a `wazend` prefix on purpose: the versioned node files use a
+    // local `baseDescription` variable, so a plain `baseDescription` export
+    // would shadow itself and throw "cannot access before initialization".
+    (text) => text.replaceAll('BASE_DESCRIPTION', 'wazendBaseDescription').replaceAll('NODE_DESCRIPTION', 'wazendNodeDescription'),
   ]],
   ['nodes/Wazend/base/WazendTrigger.node.ts', [
     (text, file) => once(text, /export const BASE_TRIGGER_DESCRIPTION/,
@@ -77,7 +80,7 @@ const conformRules = new Map([
   ]],
   ['nodes/Wazend/Wazend.node.ts', [
     (text, file) => once(text, /from "\.\/base\/node"/, 'from "./base/Wazend.node"', file),
-    (text) => text.replaceAll('BASE_DESCRIPTION', 'baseDescription'),
+    (text) => text.replaceAll('BASE_DESCRIPTION', 'wazendBaseDescription'),
   ]],
   ['nodes/Wazend/WazendTrigger.node.ts', [
     (text, file) => once(text, /from "\.\/base\/trigger"/, 'from "./base/WazendTrigger.node"', file),
@@ -88,7 +91,7 @@ const conformRules = new Map([
       [`nodes/Wazend/${dir}/Wazend${dir}.ts`, [
         (text, file) => once(text, /from '\.\.\/base\/node'/, "from '../base/Wazend.node'", file),
         versionedFix(version),
-        (text) => text.replaceAll('BASE_DESCRIPTION', 'baseDescription').replaceAll('NODE_DESCRIPTION', 'nodeDescription'),
+        (text) => text.replaceAll('BASE_DESCRIPTION', 'wazendBaseDescription').replaceAll('NODE_DESCRIPTION', 'wazendNodeDescription'),
       ]],
       [`nodes/Wazend/${dir}/WazendTriggerV${version}.ts`, [
         (text, file) => once(text, /from '\.\.\/base\/trigger'/, "from '../base/WazendTrigger.node'", file),
@@ -253,11 +256,12 @@ const pkg = { ...upstreamPackage,
   scripts: {
     build: 'node scripts/build.mjs',
     test: 'jest --runInBand',
+    'test:dist': 'node scripts/smoke-dist.mjs',
     'test:sync': 'node scripts/sync.test.mjs',
     'check:branding': 'node scripts/check-branding.mjs',
     lint: 'node scripts/lint-community.mjs',
     'lint:dist': 'node scripts/lint-community.mjs --dist',
-    prepublishOnly: 'npm run check:branding && npm run lint && npm test && npm run build && npm run lint:dist',
+    prepublishOnly: 'npm run check:branding && npm run lint && npm test && npm run build && npm run test:dist && npm run lint:dist',
   },
   devDependencies,
 };

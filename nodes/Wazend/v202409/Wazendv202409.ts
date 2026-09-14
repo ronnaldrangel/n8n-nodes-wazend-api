@@ -1,6 +1,6 @@
 import { INodeType, INodeTypeDescription } from 'n8n-workflow';
 import * as doc from './openapi.json';
-import { baseDescription, nodeDescription } from '../base/Wazend.node';
+import { wazendBaseDescription, wazendNodeDescription } from '../base/Wazend.node';
 import { WazendOperationsCollector } from '../openapi/WazendOperationsCollector';
 import {
 	N8NPropertiesBuilder,
@@ -61,8 +61,8 @@ const properties = parser.build(customDefaults);
 
 export class Wazendv202409 implements INodeType {
 	description: INodeTypeDescription = {
-		...baseDescription,
-		...nodeDescription,
+		...wazendBaseDescription,
+		...wazendNodeDescription,
 		version: 202409,
 		usableAsTool: true,
 		// @ts-ignore

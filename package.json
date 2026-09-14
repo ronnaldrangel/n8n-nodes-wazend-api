@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-wazend-api",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Wazend API nodes for WhatsApp messaging and webhook events in n8n",
   "keywords": [
     "n8n-community-node-package"
@@ -26,11 +26,12 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "test": "jest --runInBand",
+    "test:dist": "node scripts/smoke-dist.mjs",
     "test:sync": "node scripts/sync.test.mjs",
     "check:branding": "node scripts/check-branding.mjs",
     "lint": "node scripts/lint-community.mjs",
     "lint:dist": "node scripts/lint-community.mjs --dist",
-    "prepublishOnly": "npm run check:branding && npm run lint && npm test && npm run build && npm run lint:dist"
+    "prepublishOnly": "npm run check:branding && npm run lint && npm test && npm run build && npm run test:dist && npm run lint:dist"
   },
   "files": [
     "dist",

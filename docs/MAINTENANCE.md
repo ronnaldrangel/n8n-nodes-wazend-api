@@ -22,6 +22,7 @@ npm run check:branding
 npm run lint
 npm test
 npm run build
+npm run test:dist
 npm run lint:dist
 ```
 
@@ -54,6 +55,7 @@ Verified community nodes must satisfy the [n8n verification guidelines](https://
 - **No forbidden build output.** n8n rejects bundles with logging transports, worker threads, `Function` constructor calls or restricted globals. The OpenAPI builder's optional `pino` logger is therefore replaced by `scripts/stubs/pino.cjs` at build time.
 - **Community node conventions.** Node descriptions live in `<Name>.node.ts` files, `name` is camel case, every node version declares `usableAsTool`, node and credential classes declare their icons and documentation URL, and only `n8n-workflow`/`lodash` imports are used in shipped code.
 - **Local checks.** `npm run lint` runs the same ESLint configuration as `npx @n8n/scan-community-package` over the sources, and `npm run lint:dist` runs it over the published bundle. Both run in CI and before every publication.
+- **Bundle smoke test.** `npm run test:dist` requires every entry listed in `package.json#n8n` from `dist/` and instantiates it, the same way n8n loads a package. Static checks cannot see load-time failures such as a module binding read before initialization, so this runs in CI and before every publication.
 
 Publication runs only from GitHub Actions with npm provenance, so publishing from a local machine is unnecessary for n8n verification. Submitting the node for review happens in the [n8n Creator Portal](https://creators.n8n.io/nodes) with the account that owns the npm package. Branding alone does not satisfy verification requirements.
 

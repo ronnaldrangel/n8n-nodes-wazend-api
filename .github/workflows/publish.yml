@@ -137,6 +137,9 @@ jobs:
       - name: Build
         if: steps.plan.outputs.skip == 'false'
         run: npm run build
+      - name: Load the built bundle
+        if: steps.plan.outputs.skip == 'false'
+        run: npm run test:dist
       - name: Check published bundle
         if: steps.plan.outputs.skip == 'false'
         run: npm run lint:dist

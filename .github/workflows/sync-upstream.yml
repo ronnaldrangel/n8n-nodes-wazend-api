@@ -46,6 +46,7 @@ jobs:
           npm run lint
           npm test
           npm run build
+          npm run test:dist
           npm run lint:dist
           npm pack --ignore-scripts
       - name: Prepare validated patch
