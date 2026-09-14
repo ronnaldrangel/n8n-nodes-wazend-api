@@ -38,6 +38,8 @@ Synchronization needs no custom token: repository policy only has to permit the 
 
 Bumping the version in `package.json` before pushing keeps the release under maintainer control and is the recommended path for minor and major releases.
 
+The `0.1.x` numbers are burned: npm rejects a version that existed before the package was unpublished on 2026-08-07, so the current line starts at `0.2.0`.
+
 ## Verification
 
 Publication runs only from GitHub Actions with npm provenance, so publishing from a local machine is unnecessary for n8n verification. Verification also requires additional eligibility work, including removal of runtime external dependencies. Branding alone does not satisfy verification requirements.
