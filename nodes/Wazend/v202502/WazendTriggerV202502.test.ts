@@ -1,0 +1,61 @@
+import { WazendTriggerV202502 } from './WazendTriggerV202502';
+
+test('WazendTriggerV202502.outputs', () => {
+	const node = new WazendTriggerV202502();
+	expect(node.description.outputs).toEqual([
+		"main",
+		"main",
+		"main",
+		"main",
+		"main",
+		"main",
+		"main",
+		"main",
+		"main",
+		"main",
+		"main",
+		"main",
+		"main",
+		"main",
+		"main",
+		"main",
+		"main",
+		"main",
+		"main",
+		"main",
+		"main",
+		"main",
+		"main",
+		"main",
+		"main",
+		"main"
+	] );
+	expect(node.description.outputNames).toEqual([
+		"session.status",
+		"message",
+		"message.reaction",
+		"message.any",
+		"message.ack",
+		"message.waiting",
+		"message.revoked",
+		"state.change",
+		"group.join",
+		"group.leave",
+		"group.v2.join",
+		"group.v2.leave",
+		"group.v2.update",
+		"group.v2.participants",
+		"presence.update",
+		"poll.vote",
+		"poll.vote.failed",
+		"chat.archive",
+		"call.received",
+		"call.accepted",
+		"call.rejected",
+		"label.upsert",
+		"label.deleted",
+		"label.chat.added",
+		"label.chat.deleted",
+		"engine.event"
+	]);
+});

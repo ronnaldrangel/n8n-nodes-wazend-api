@@ -1,0 +1,81 @@
+name: Sync upstream
+on:
+  schedule:
+    - cron: '23 6 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: upstream-sync
+  cancel-in-progress: false
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.check.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download upstream
+        run: git clone --depth 1 --branch master https://github.com/devlikeapro/n8n-nodes-waha.git "$RUNNER_TEMP/upstream"
+      - name: Detect updates
+        id: check
+        run: |
+          CURRENT=$(node -p "require('./upstream.json').commit")
+          LATEST=$(git -C "$RUNNER_TEMP/upstream" rev-parse HEAD)
+          if [ "$CURRENT" = "$LATEST" ]; then
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+          else
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Regenerate Wazend package
+        if: steps.check.outputs.changed == 'true'
+        run: node scripts/sync-upstream.mjs "$RUNNER_TEMP/upstream"
+      - name: Validate updated package
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run check:branding
+          npm run test:sync -- "$RUNNER_TEMP/upstream"
+          npm test
+          npm run build
+          npm pack --ignore-scripts
+      - name: Prepare validated patch
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          git add nodes credentials package.json package-lock.json upstream.json tsconfig.json jest.config.js .eslintrc.js .eslintrc.prepublish.js .prettierrc.js .editorconfig index.js LICENSE.md
+          git diff --cached --binary > "$RUNNER_TEMP/sync.patch"
+          git rev-parse HEAD > "$RUNNER_TEMP/base-sha"
+      - uses: actions/upload-artifact@v4
+        if: steps.check.outputs.changed == 'true'
+        with:
+          name: validated-sync
+          path: |
+            ${{ runner.temp }}/sync.patch
+            ${{ runner.temp }}/base-sha
+  apply:
+    needs: prepare
+    if: needs.prepare.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: validated-sync
+          path: ${{ runner.temp }}/validated-sync
+      - name: Apply only to the validated base
+        env:
+          TARGET_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$(cat "$RUNNER_TEMP/validated-sync/base-sha")"
+          git apply --index "$RUNNER_TEMP/validated-sync/sync.patch"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'chore: sync upstream with Wazend branding'
+          git push origin "HEAD:$TARGET_BRANCH"

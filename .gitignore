@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.upstream/
+*.tgz
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+npm-debug.log*

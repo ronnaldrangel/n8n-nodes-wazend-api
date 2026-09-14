@@ -1,0 +1,20 @@
+{
+  "node": "n8n-nodes-wazend-api.Wazend",
+  "nodeVersion": "1.0",
+  "codexVersion": "1.0",
+  "categories": [
+    "Whatsapp"
+  ],
+  "resources": {
+    "credentialDocumentation": [
+      {
+        "url": "https://wazend.net/docs/introduccion"
+      }
+    ],
+    "primaryDocumentation": [
+      {
+        "url": "https://wazend.net/docs/introduccion"
+      }
+    ]
+  }
+}
