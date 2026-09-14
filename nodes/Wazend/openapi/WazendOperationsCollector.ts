@@ -1,4 +1,4 @@
-import { OpenAPIV3 } from 'openapi-types';
+import type { OpenAPIV3 } from 'openapi-types';
 import { INodeProperties } from 'n8n-workflow';
 import { OperationsCollector, OperationContext } from '@devlikeapro/n8n-openapi-node';
 

@@ -1,7 +1,8 @@
 import {
 	INodeType,
-	INodeTypeDescription, NodeConnectionType,
+	INodeTypeDescription,
 } from 'n8n-workflow';
+import type { NodeConnectionType } from 'n8n-workflow';
 
 import * as doc from './openapi.json';
 import {
@@ -9,7 +10,7 @@ import {
 	CONFIGURE_WEBHOOK_NOTE,
 	makeEventNote, makeWebhookForEvents,
 	TRIGGER_DESCRIPTION,
-} from '../base/trigger';
+} from '../base/WazendTrigger.node';
 
 function getEvents() {
 	const schemas = doc.components.schemas;
@@ -19,7 +20,7 @@ function getEvents() {
 }
 
 const events = getEvents();
-const outputs = events.map((_) => NodeConnectionType.Main);
+const outputs: NodeConnectionType[] = events.map(() => 'main');
 const outputNames = events;
 
 
@@ -28,6 +29,7 @@ export class WazendTriggerV202409 implements INodeType {
 		...BASE_TRIGGER_DESCRIPTION,
 		...TRIGGER_DESCRIPTION,
 		version: 202409,
+		usableAsTool: true,
 		outputs: outputs,
 		outputNames: outputNames,
 		properties: [CONFIGURE_WEBHOOK_NOTE, makeEventNote(events)],

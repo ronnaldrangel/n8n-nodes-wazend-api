@@ -1,5 +1,5 @@
 {
-  "node": "n8n-nodes-wazend-api.Wazend",
+  "node": "n8n-nodes-wazend-api.wazend",
   "nodeVersion": "1.0",
   "codexVersion": "1.0",
   "categories": [

@@ -8,6 +8,7 @@ import {
 	type IWebhookResponseData,
 } from 'n8n-workflow';
 
+// Base descriptions and webhook helpers shared by every version of the Wazend Trigger node.
 export const BASE_TRIGGER_DESCRIPTION: INodeTypeBaseDescription = {
 	displayName: 'Wazend Trigger',
 	name: 'wazendTrigger',

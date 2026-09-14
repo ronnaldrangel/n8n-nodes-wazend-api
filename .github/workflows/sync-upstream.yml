@@ -38,11 +38,15 @@ jobs:
       - name: Validate updated package
         if: steps.check.outputs.changed == 'true'
         run: |
-          npm ci --ignore-scripts --no-audit --no-fund
+          # `npm install` (not `ci`) keeps package-lock.json in step with the
+          # regenerated manifest; the lock is committed with the sync.
+          npm install --ignore-scripts --no-audit --no-fund
           npm run check:branding
           npm run test:sync -- "$RUNNER_TEMP/upstream"
+          npm run lint
           npm test
           npm run build
+          npm run lint:dist
           npm pack --ignore-scripts
       - name: Prepare validated patch
         if: steps.check.outputs.changed == 'true'

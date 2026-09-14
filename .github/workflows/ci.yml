@@ -19,8 +19,10 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: npm run check:branding
+      - run: npm run lint
       - run: npm test
       - run: npm run build
+      - run: npm run lint:dist
       - run: npm pack --ignore-scripts
       - uses: actions/upload-artifact@v4
         with:

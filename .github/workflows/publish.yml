@@ -128,12 +128,18 @@ jobs:
       - name: Check branding
         if: steps.plan.outputs.skip == 'false'
         run: npm run check:branding
+      - name: Check n8n community node rules
+        if: steps.plan.outputs.skip == 'false'
+        run: npm run lint
       - name: Test
         if: steps.plan.outputs.skip == 'false'
         run: npm test
       - name: Build
         if: steps.plan.outputs.skip == 'false'
         run: npm run build
+      - name: Check published bundle
+        if: steps.plan.outputs.skip == 'false'
+        run: npm run lint:dist
       - name: Publish validated package
         if: steps.plan.outputs.skip == 'false'
         run: npm publish --ignore-scripts --provenance --access public

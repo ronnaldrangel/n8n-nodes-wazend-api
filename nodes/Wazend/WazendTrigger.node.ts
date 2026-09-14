@@ -1,6 +1,6 @@
 import type { INodeTypeBaseDescription, IVersionedNodeType } from 'n8n-workflow';
 import { VersionedNodeType } from 'n8n-workflow';
-import {BASE_TRIGGER_DESCRIPTION} from "./base/trigger";
+import {BASE_TRIGGER_DESCRIPTION} from "./base/WazendTrigger.node";
 import {WazendTriggerV202409} from "./v202409/WazendTriggerV202409";
 import {WazendTriggerV202502} from "./v202502/WazendTriggerV202502";
 
